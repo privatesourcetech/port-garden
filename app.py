@@ -6,6 +6,8 @@ from nicegui import run, ui
 
 from service_overrides import SERVICE_OVERRIDES
 
+from providers.socket_provider import DockerSocketProvider
+
 from settings import (
     DOCKER_HOST_ADDRESS,
     SSH_HOST,
@@ -18,9 +20,11 @@ from settings import (
 from services.docker_inventory import (
     DockerPort,
     export_ports_csv,
-    fetch_docker_ports,
 )
 
+docker_provider = DockerSocketProvider(
+    host_address=DOCKER_HOST_ADDRESS,
+)
 
 OUTPUT_DIRECTORY = Path(__file__).parent / "output"
 CSV_PATH = OUTPUT_DIRECTORY / "docker_ports.csv"
@@ -126,10 +130,7 @@ async def scan_docker() -> None:
 
     try:
         records = await run.io_bound(
-            fetch_docker_ports,
-            SSH_HOST,
-            SSH_USERNAME,
-            SSH_PORT,
+            docker_provider.fetch,
         )
 
         docker_records.clear()
