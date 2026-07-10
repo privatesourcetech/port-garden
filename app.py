@@ -30,6 +30,12 @@ OUTPUT_DIRECTORY = Path(__file__).parent / "output"
 CSV_PATH = OUTPUT_DIRECTORY / "docker_ports.csv"
 
 docker_records: list[DockerPort] = []
+last_scan_summary = {
+    "total": 0,
+    "running": 0,
+    "stopped": 0,
+    "services": 0,
+}
 dark = ui.dark_mode(value=True)
 
 columns = [
@@ -135,6 +141,32 @@ async def scan_docker() -> None:
 
         docker_records.clear()
         docker_records.extend(records)
+
+        container_names = {
+            record.container
+            for record in records
+        }
+
+        running_names = {
+            record.container
+            for record in records
+            if record.status.lower() == "running"
+        }
+
+        stopped_names = container_names - running_names
+
+        web_service_names = {
+            record.container
+            for record in records
+            if record.local_url
+        }
+
+        last_scan_summary["total"] = len(container_names)
+        last_scan_summary["running"] = len(running_names)
+        last_scan_summary["stopped"] = len(stopped_names)
+        last_scan_summary["services"] = len(web_service_names)
+
+        scan_summary.refresh()
         docker_cards.refresh()
 
         table.rows = [
@@ -208,23 +240,116 @@ async def save_csv() -> None:
             close_button=True,
         )
 
+@ui.refreshable
+def scan_summary() -> None:
+    with ui.row().classes(
+        "w-full gap-3 flex-wrap"
+    ):
+        summary_items = [
+            (
+                "Containers",
+                last_scan_summary["total"],
+                "inventory_2",
+                "text-sky-400",
+            ),
+            (
+                "Running",
+                last_scan_summary["running"],
+                "check_circle",
+                "text-emerald-400",
+            ),
+            (
+                "Stopped",
+                last_scan_summary["stopped"],
+                "cancel",
+                "text-red-400",
+            ),
+            (
+                "Web Services",
+                last_scan_summary["services"],
+                "language",
+                "text-violet-400",
+            ),
+        ]
+
+        for label, value, icon, icon_class in summary_items:
+            with ui.card().classes(
+                "min-w-44 flex-1 "
+                "bg-slate-900/60 border border-white/10 "
+                "shadow-sm"
+            ):
+                with ui.row().classes(
+                    "items-center justify-between w-full"
+                ):
+                    with ui.column().classes("gap-0"):
+                        ui.label(label).classes(
+                            "text-xs uppercase tracking-wider "
+                            "text-slate-400"
+                        )
+
+                        ui.label(str(value)).classes(
+                            "text-2xl font-bold text-white"
+                        )
+
+                    ui.icon(icon).classes(
+                        f"text-3xl {icon_class}"
+                    )
 
 ui.page_title("Port Garden")
 
-with ui.header().classes("items-center"):
-    ui.label("Port Garden").classes("text-2xl font-bold")
+with ui.header().classes(
+    "items-center px-6 py-3 "
+    "bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-950 "
+    "border-b border-emerald-500/20 shadow-lg"
+):
+    with ui.row().classes("items-center gap-3"):
+        with ui.element("div").classes(
+            "w-11 h-11 rounded-xl "
+            "bg-emerald-500/15 border border-emerald-400/30 "
+            "flex items-center justify-center"
+        ):
+            ui.icon("yard").classes("text-emerald-400 text-2xl")
+
+        with ui.column().classes("gap-0"):
+            ui.label("Port Garden").classes(
+                "text-xl font-bold tracking-wide text-white"
+            )
+
+            ui.label(
+                "Your local services, all in one place"
+            ).classes(
+                "text-xs text-slate-400"
+            )
+
     ui.space()
-    ui.label(f"TrueNAS: {DOCKER_HOST_ADDRESS}")
 
-    dark_button = ui.button(
-        icon="dark_mode",
-        on_click=lambda: dark.toggle(),
-    ).props("round").classes("text-white bg-white/10")
+    with ui.row().classes("items-center gap-3"):
+        with ui.element("div").classes(
+            "hidden md:flex items-center gap-2 "
+            "px-3 py-2 rounded-lg "
+            "bg-white/5 border border-white/10"
+        ):
+            ui.icon("dns").classes("text-emerald-400")
 
-    dark_button.tooltip("Toggle dark mode")
+            ui.label(DOCKER_HOST_ADDRESS).classes(
+                "text-sm text-slate-200 font-medium"
+            )
+
+        dark_button = ui.button(
+            icon="dark_mode",
+            on_click=lambda: dark.toggle(),
+        ).props(
+            "flat round"
+        ).classes(
+            "text-white bg-white/10 hover:bg-white/20"
+        )
+
+        dark_button.tooltip("Toggle dark mode")
 
 with ui.column().classes("w-full max-w-7xl mx-auto p-6 gap-6"):
     ui.label("Docker Tools").classes("text-3xl font-bold")
+
+    scan_summary()
 
     with ui.card().classes("w-full"):
         ui.label("Docker Port Inventory").classes("text-xl font-semibold")
@@ -232,20 +357,37 @@ with ui.column().classes("w-full max-w-7xl mx-auto p-6 gap-6"):
             "Read published Docker ports from TrueNAS over SSH."
         ).classes("text-gray-500")
 
-        with ui.row().classes("items-center"):
+        with ui.row().classes(
+            "items-center gap-3 w-full"
+        ):
             scan_button = ui.button(
                 "Scan Docker",
                 icon="refresh",
                 on_click=scan_docker,
+            ).props(
+                "unelevated"
+            ).classes(
+                "bg-emerald-600 hover:bg-emerald-500 "
+                "text-white font-medium"
             )
 
             ui.button(
                 "Export CSV",
                 icon="download",
                 on_click=save_csv,
+            ).props(
+                "outline"
+            ).classes(
+                "text-slate-200 border-slate-600"
             )
 
-        status_label = ui.label("Docker has not been scanned yet.")
+            ui.space()
+
+            status_label = ui.label(
+                "Docker has not been scanned yet."
+            ).classes(
+                "text-sm text-slate-400"
+            )
 
 
     def choose_web_record(records: list[DockerPort]) -> DockerPort | None:
