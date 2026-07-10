@@ -1,8 +1,6 @@
 services:
   port-garden:
-    build:
-      context: .
-    image: port-garden:local
+    image: ghcr.io/privatesourcetech/port-garden:latest
     container_name: port-garden
     restart: unless-stopped
 
