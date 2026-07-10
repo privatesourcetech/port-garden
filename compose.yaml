@@ -1,0 +1,20 @@
+services:
+  port-garden:
+    build:
+      context: .
+    image: port-garden:local
+    container_name: port-garden
+    restart: unless-stopped
+
+    ports:
+      - "8090:8080"
+
+    environment:
+      TZ: "America/New_York"
+      PORT_GARDEN_HOST_ADDRESS: "192.168.1.171"
+      PORT_GARDEN_WEB_HOST: "0.0.0.0"
+      PORT_GARDEN_WEB_PORT: "8080"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./output:/app/output
