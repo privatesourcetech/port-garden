@@ -6,11 +6,15 @@ from nicegui import run, ui
 
 from service_overrides import SERVICE_OVERRIDES
 
-from config import (
-    TRUENAS_HOST,
-    TRUENAS_SSH_PORT,
-    TRUENAS_USERNAME,
+from settings import (
+    DOCKER_HOST_ADDRESS,
+    SSH_HOST,
+    SSH_PORT,
+    SSH_USERNAME,
+    WEB_HOST,
+    WEB_PORT,
 )
+
 from services.docker_inventory import (
     DockerPort,
     export_ports_csv,
@@ -123,9 +127,9 @@ async def scan_docker() -> None:
     try:
         records = await run.io_bound(
             fetch_docker_ports,
-            TRUENAS_HOST,
-            TRUENAS_USERNAME,
-            TRUENAS_SSH_PORT,
+            SSH_HOST,
+            SSH_USERNAME,
+            SSH_PORT,
         )
 
         docker_records.clear()
@@ -209,7 +213,7 @@ ui.page_title("Port Garden")
 with ui.header().classes("items-center"):
     ui.label("Port Garden").classes("text-2xl font-bold")
     ui.space()
-    ui.label(f"TrueNAS: {TRUENAS_HOST}")
+    ui.label(f"TrueNAS: {DOCKER_HOST_ADDRESS}")
 
     dark_button = ui.button(
         icon="dark_mode",
@@ -426,7 +430,7 @@ with ui.column().classes("w-full max-w-7xl mx-auto p-6 gap-6"):
             9443,
         } else "http"
 
-        return f"{scheme}://{TRUENAS_HOST}:{selected_port}"
+        return f"{scheme}://{DOCKER_HOST_ADDRESS}:{selected_port}"
 
     @ui.refreshable
     def docker_cards() -> None:
@@ -609,7 +613,7 @@ with ui.column().classes("w-full max-w-7xl mx-auto p-6 gap-6"):
 
 ui.run(
     title="Port Garden",
-    host="127.0.0.1",
-    port=8080,
+    host=WEB_HOST,
+    port=WEB_PORT,
     reload=False,
 )
