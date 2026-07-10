@@ -204,10 +204,10 @@ async def save_csv() -> None:
         )
 
 
-ui.page_title("NiceLab")
+ui.page_title("Port Garden")
 
 with ui.header().classes("items-center"):
-    ui.label("NiceLab").classes("text-2xl font-bold")
+    ui.label("Port Garden").classes("text-2xl font-bold")
     ui.space()
     ui.label(f"TrueNAS: {TRUENAS_HOST}")
 
@@ -608,7 +608,7 @@ with ui.column().classes("w-full max-w-7xl mx-auto p-6 gap-6"):
     )
 
 ui.run(
-    title="NiceLab",
+    title="Port Garden",
     host="127.0.0.1",
     port=8080,
     reload=False,
