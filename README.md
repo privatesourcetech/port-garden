@@ -52,8 +52,10 @@ Optional environment variables: `SETUP_TOKEN` (the setup page also asks for it),
 (where `auth.json` lives; default `output`). Keep `./output` mounted, or the
 login is lost on every redeploy.
 
-Port Garden still mounts the Docker socket, which is root-equivalent: keep it on
-a trusted LAN, never the internet.
+Port Garden reaches Docker through a **read-only socket proxy** sidecar (see
+`compose.yaml`, `DOCKER_HOST=tcp://socket-proxy:2375`), so it can list and inspect
+containers but cannot start, stop, create or exec anything. Keep it on a trusted
+LAN, never the internet.
 
 ## Screenshots
 

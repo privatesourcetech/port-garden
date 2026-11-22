@@ -13,7 +13,23 @@ services:
       PORT_GARDEN_HOST_ADDRESS: "192.168.1.171"
       PORT_GARDEN_WEB_HOST: "0.0.0.0"
       PORT_GARDEN_WEB_PORT: "8080"
+      # Docker is reached through the read-only proxy below, not the raw socket.
+      DOCKER_HOST: "tcp://socket-proxy:2375"
+
+    depends_on:
+      - socket-proxy
 
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./output:/app/output
+
+  # Read-only Docker socket proxy: only GET on containers. Any start/stop/create/
+  # exec call is refused (403). Never publish a port on this service.
+  socket-proxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:latest
+    pull_policy: always
+    container_name: port-garden-socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
