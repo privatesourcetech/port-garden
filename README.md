@@ -35,6 +35,26 @@ The project is built with Python and [NiceGUI](https://nicegui.io/).
 
 ---
 
+## Login
+
+Every page, static file and the NiceGUI websocket require a login (one admin
+user, session cookie, `SameSite=Strict`, Origin check on writes, failed-login
+throttling).
+
+**First run works like Radarr/Sonarr:** open the page and create a username and
+password. The password is stored as a scrypt hash, with a generated session
+secret, in `auth.json` inside the mounted `./output` volume (mode 0600). Until
+that is done nothing else is served, so complete it right after deploying. To
+reset, delete `output/auth.json` and restart.
+
+Optional environment variables: `SETUP_TOKEN` (the setup page also asks for it),
+`SESSION_HOURS`, `COOKIE_SECURE=1` (behind HTTPS), `PORT_GARDEN_DATA_DIR`
+(where `auth.json` lives; default `output`). Keep `./output` mounted, or the
+login is lost on every redeploy.
+
+Port Garden still mounts the Docker socket, which is root-equivalent: keep it on
+a trusted LAN, never the internet.
+
 ## Screenshots
 
 Screenshots will be added as the interface develops.

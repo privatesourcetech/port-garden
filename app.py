@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
-from nicegui import run, ui
+from nicegui import app, run, ui
+
+import login
 
 from service_overrides import SERVICE_OVERRIDES
 
@@ -753,6 +756,8 @@ with ui.column().classes("w-full max-w-7xl mx-auto p-6 gap-6"):
         </q-td>
         """,
     )
+
+login.install(app, Path(os.getenv("PORT_GARDEN_DATA_DIR", str(Path(__file__).parent / "output"))))
 
 ui.run(
     title="Port Garden",
