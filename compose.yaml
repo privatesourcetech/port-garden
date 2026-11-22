@@ -1,6 +1,7 @@
 services:
   port-garden:
     image: ghcr.io/privatesourcetech/port-garden:latest
+    pull_policy: always
     container_name: port-garden
     restart: unless-stopped
 
